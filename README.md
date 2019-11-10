@@ -1,2 +1,2 @@
 # smsc
-SMSC API
+SMSC API Client
