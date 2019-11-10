@@ -1,6 +1,7 @@
 {
   "name": "brandshopru/smsc",
   "description": "PHP client for SMS Center",
+  "type": "library",
   "require": {
     "php": "^7.1",
     "guzzlehttp/guzzle": "^6.0"
