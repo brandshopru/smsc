@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 namespace Brandshopru\Smsc;
 
@@ -22,6 +21,7 @@ class Client
         $this->useHttps = $useHttps;        //использовать HTTPS протокол
         $this->charset = $charset;          //кодировка сообщения: utf-8, koi8-r или windows-1251 (по умолчанию)
         $this->from = $emailSender;         //e-mail адрес отправителя
+        
     }
 
     /**
@@ -213,7 +213,7 @@ class Client
      * @param $cmd
      * @param string $arg
      * @param array $files
-     * @return array
+     * @return mixed
      */
     private function _smsc_send_cmd($cmd, $arg = "", $files = [])
     {
