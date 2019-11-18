@@ -157,7 +157,7 @@ class Client
      */
     public function get_sms_history($phone = null, $start_date = null, $end_date = null) {
         if (!$start_date) {
-            $start_date = date('d.m.Y', strtotime('-6 month'));
+            $start_date = date('d.m.Y', strtotime('-1 day'));
         }
         if (!$end_date) {
             $end_date = date('d.m.Y');
@@ -184,8 +184,8 @@ class Client
     public function get_history($start_date, $end_date, $phone = null, $email = null, $format = 0, $limit = 1000, $last_id = null) {
         return $this->request( "get", [
             "get_messages" => 1,
-            "start" => $start_date,
-            "end" => $end_date,
+            "start" => date('d.m.Y', strtotime($start_date)),
+            "end" => date('d.m.Y', strtotime($end_date)),
             "phone" => $phone,
             "email" => $email,
             "format" => $format,
