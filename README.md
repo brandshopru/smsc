@@ -31,8 +31,8 @@ use Brandshopru\Smsc\Client;
     try {
         $result = $SmsCenterClient->send_sms($phone, $message);
         if ($result->isOk()) {
-            $details = $result->getContent();
             // сообщение отправлено
+            $details = $result->getContent();
         } else {
             // что-то пошло не так
         }
