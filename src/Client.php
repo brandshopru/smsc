@@ -62,60 +62,6 @@ class Client
     }
 
     /**
-     * SMTP версия функции отправки SMS
-     *
-     * обязательные параметры:
-     * @param $phones - список телефонов через запятую или точку с запятой
-     * @param $message - отправляемое сообщение
-     * необязательные параметры:
-     * @param int $translit - переводить или нет в транслит (1,2 или 0)
-     * @param int $time - необходимое время доставки в виде строки (DDMMYYhhmm, h1-h2, 0ts, +m)
-     * @param int $id - идентификатор сообщения. Представляет собой 32-битное число в диапазоне от 1 до 2147483647.
-     * @param int $format - формат сообщения (0 - обычное sms, 1 - flash-sms, 2 - wap-push, 3 - hlr, 4 - bin, 5 - bin-hex, 6 - ping-sms, 7 - mms, 8 - mail, 9 - call, 10 - viber, 11 - soc)
-     * @param bool $sender - имя отправителя (Sender ID)
-     *
-     * @return bool
-     */
-    public function send_sms_mail($phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender = "")
-    {
-        return mail("send@send.smsc.ru", "",
-            $this->login.":".$this->password.":$id:$time:$translit,$format,$sender:$phones:$message",
-            "From: ".$this->from."\nContent-Type: text/plain; charset=".$this->charset."\n");
-    }
-
-    /**
-     * Функция получения стоимости SMS
-     *
-     * обязательные параметры:
-     * @param $phones - список телефонов через запятую или точку с запятой
-     * @param $message - отправляемое сообщение
-     * необязательные параметры:
-     * @param int $translit - переводить или нет в транслит (1,2 или 0)
-     * @param int $format - формат сообщения (0 - обычное sms, 1 - flash-sms, 2 - wap-push, 3 - hlr, 4 - bin, 5 - bin-hex, 6 - ping-sms, 7 - mms, 8 - mail, 9 - call, 10 - viber, 11 - soc)
-     * @param bool $sender - имя отправителя (Sender ID)
-     * @param array $query - строка дополнительных параметров, добавляемая в URL-запрос ("list=79999999999:Ваш пароль: 123\n78888888888:Ваш пароль: 456")
-     *
-     * @return \Brandshopru\Smsc\Response
-     * @throws \Exception
-     */
-    public function get_sms_cost($phones, $message, $translit = 0, $format = 0, $sender = false, $query = [])
-    {
-        if ($format) {
-            $query = array_merge($query, $this->getFormat($format));
-        }
-        if ($sender) {
-            $query['sender'] = $sender;
-        }
-
-        return $this->request("send", array_merge($query, [
-            "cost" => 1,
-            "phones" => $phones,
-            "mes" => $message,
-            "translit" => $translit,
-        ]));
-    }
-
-    /**
      * Функция проверки статуса отправленного SMS или HLR-запроса
      *
      * @param $id - ID cообщения или список ID через запятую
@@ -132,17 +78,6 @@ class Client
             "id" => $id,
             "all" => (int)$all,
         ]);
-    }
-
-    /**
-     * Функция получения баланса
-     *
-     * @return \Brandshopru\Smsc\Response
-     * @throws \Exception
-     */
-    public function get_balance()
-    {
-        return $this->request("balance");
     }
 
     /**
@@ -195,7 +130,7 @@ class Client
     }
 
     /**
-     * Функция вызова запроса. Формирует URL и делает 5 попыток чтения через разные подключения к сервису
+     * Функция вызова запроса. Формирует URL и делает попытоку чтения через подключение к сервису
      *
      * @param $cmd
      * @param array $data
@@ -214,10 +149,16 @@ class Client
             "charset" => $this->charset,
         ]);
 
-        $postData = [];
+        $client = new \GuzzleHttp\Client([
+            "headers" => ["Expect"=>""],
+            "timeout" => 20,
+            "connect_timeout" => 10,
+            "verify" => false,
+        ]);
 
         $usePost = $this->methodPost || strlen($base_url."?".http_build_query($data)) > 2000 || $files;
         if ($usePost) {
+            $postData = [];
             foreach ($data as $key => $value) {
                 $postData[] = [
                     "name"     => $key,
@@ -232,36 +173,13 @@ class Client
                     ];
                 }
             }
+
+            $httpResponse = $client->request("POST", $base_url, ["multipart" => $postData]);
+        } else {
+            $httpResponse = $client->request("GET", $base_url, ["query" => $data]);
         }
 
-        $client = new \GuzzleHttp\Client([
-            "headers" => ["Expect"=>""],
-            "timeout" => 20,
-            "verify" => false,
-        ]);
-
-        $i = 0;
-        do {
-            $url = $base_url;
-            if ($i++) {
-                $url = str_replace("://smsc.ru/", "://www".$i.".smsc.ru/", $url);
-            }
-            $options = [
-                "connect_timeout" => (2 + $i),
-            ];
-            if ($usePost) {
-                $httpResponse = $client->request("POST", $url, array_replace_recursive($options, [
-                    "multipart" => $postData,
-                ]));
-            } else {
-                $httpResponse = $client->request("GET", $url, array_replace_recursive($options, [
-                    "query" => $data,
-                ]));
-            }
-            $response = new Response($httpResponse);
-        } while (!$response->isOk() && $i < 5);
-
-        return $response;
+        return new Response($httpResponse);;
     }
 
     private function getFormat($id) {
