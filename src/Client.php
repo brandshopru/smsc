@@ -130,7 +130,24 @@ class Client
     }
 
     /**
-     * Функция вызова запроса. Формирует URL и делает попытоку чтения через подключение к сервису
+     * Получение статистики по аккаунту за период
+     *
+     * @param $start_date - начальная дата в периоде, за который запрашивается статистика. Формат: 'дд.мм.гггг'.
+     * @param $end_date - конечная дата в периоде. Формат: 'дд.мм.гггг'.
+     *
+     * @return \Brandshopru\Smsc\Response
+     * @throws \Exception
+     */
+    public function get_statistics($start_date, $end_date) {
+        return $this->request( "get", [
+            "get_stat" => 1,
+            "start" => date('d.m.Y', strtotime($start_date)),
+            "end" => date('d.m.Y', strtotime($end_date)),
+        ]);
+    }
+
+    /**
+     * Функция вызова запроса. Формирует URL и делает попытку чтения через подключение к сервису
      *
      * @param $cmd
      * @param array $data
