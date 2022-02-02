@@ -168,8 +168,8 @@ class Client
 
         $client = new \GuzzleHttp\Client([
             "headers" => ["Expect"=>""],
-            "timeout" => 20,
-            "connect_timeout" => 10,
+            "timeout" => 10,
+            "connect_timeout" => 3,
             "verify" => false,
         ]);
 
