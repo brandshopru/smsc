@@ -156,7 +156,7 @@ class Client
      * @return \Brandshopru\Smsc\Response
      * @throws \Exception
      */
-    private function request($cmd, $data = [], $files = [])
+    protected function request($cmd, $data = [], $files = [])
     {
         $base_url = ($this->useHttps ? "https" : "http")."://smsc.ru/sys/$cmd.php";
         $data = array_merge($data, [
